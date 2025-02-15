@@ -1,0 +1,12 @@
+﻿  module.cpp
+C:\Users\Lucy\Desktop\GMOD TTT Server\steamapps\common\gmod-queue\playServer\source\module.cpp(43,44): warning C4459: declaration of 'serverSocket' hides global declaration
+C:\Users\Lucy\Desktop\GMOD TTT Server\steamapps\common\gmod-queue\playServer\source\module.cpp(30,8): message : see declaration of 'serverSocket'
+     Creating library x86\Release\gmsv_queuePlayServer_win32.lib and object x86\Release\gmsv_queuePlayServer_win32.exp
+  Generating code
+  1 of 367 functions ( 0.3%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    1 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  gmsv_queuePlayServer.vcxproj -> C:\Users\Lucy\Desktop\GMOD TTT Server\steamapps\common\gmod-queue\playServer\projects\windows\vs2022\x86\Release\gmsv_queuePlayServer_win32.dll
+  'pwsh.exe' is not recognized as an internal or external command,
+  operable program or batch file.

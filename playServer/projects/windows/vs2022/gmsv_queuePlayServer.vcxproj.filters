@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source files">
+      <UniqueIdentifier>{09D840D1-F53A-D075-9EC0-082C8A029CF8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Models">
+      <UniqueIdentifier>{645d3214-4745-4620-8241-11bee0276ed3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Models\Header">
+      <UniqueIdentifier>{8574b87e-8c30-4945-8542-cec0b649b3bf}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\source\module.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\Message.cpp">
+      <Filter>Source files\Models</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\source\Message.h">
+      <Filter>Source files\Models\Header</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
