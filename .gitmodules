@@ -1,0 +1,6 @@
+[submodule "playServer/garrysmod_common"]
+	path = playServer/garrysmod_common
+	url = https://github.com/danielga/garrysmod_common.git
+[submodule "queueServer/garrysmod_common"]
+	path = queueServer/garrysmod_common
+	url = https://github.com/danielga/garrysmod_common.git
