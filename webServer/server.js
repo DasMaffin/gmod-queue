@@ -62,7 +62,6 @@ const httpServer = http.createServer((req, res) => {
         const updatedData = JSON.parse(body);
         dataManager.updateData(updatedData);
         console.log("Data updated:", updatedData);
-        console.log("Data updated:", updatedData);
 
         // Notify all connected clients with the updated data
         connections.forEach((socket) => {
