@@ -77,6 +77,9 @@
     <TargetExt>.dll</TargetExt>
     <ExternalIncludePath>..\..\..\garrysmod_common\include;..\..\..\garrysmod_common\helpers\include;..\..\..\garrysmod_common\scanning\include;..\..\..\garrysmod_common\detouring\include;..\..\..\garrysmod_common\detouring\hde\include;..\..\..\garrysmod_common\detouring\minhook\include;..\..\..\garrysmod_common\sourcesdk-minimal\common;..\..\..\garrysmod_common\sourcesdk-minimal\game\shared;..\..\..\garrysmod_common\sourcesdk-minimal\public;..\..\..\garrysmod_common\sourcesdk-minimal\game\server;..\..\..\garrysmod_common\sourcesdk-minimal\public\tier0;..\..\..\garrysmod_common\sourcesdk-minimal\public\tier1;$(ExternalIncludePath)</ExternalIncludePath>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseWithSymbols|Win32'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -170,6 +173,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\source\Message.cpp" />
     <ClCompile Include="..\..\..\source\module.cpp" />
+    <ClCompile Include="..\..\..\source\tools.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\garrysmod_common\projects\windows\vs2022\helpers.vcxproj">
@@ -199,6 +203,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\source\Message.h" />
+    <ClInclude Include="..\..\..\source\tools.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

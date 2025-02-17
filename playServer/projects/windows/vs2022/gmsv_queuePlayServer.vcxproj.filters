@@ -10,6 +10,9 @@
     <Filter Include="Source files\Models\Header">
       <UniqueIdentifier>{8574b87e-8c30-4945-8542-cec0b649b3bf}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source files\Header">
+      <UniqueIdentifier>{060af481-6742-4a20-83b1-b675c9726ff4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\module.cpp">
@@ -18,10 +21,16 @@
     <ClCompile Include="..\..\..\source\Message.cpp">
       <Filter>Source files\Models</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\source\tools.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\source\Message.h">
       <Filter>Source files\Models\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\source\tools.h">
+      <Filter>Source files\Header</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

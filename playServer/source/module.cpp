@@ -1,8 +1,10 @@
 #include "GarrysMod/Lua/Interface.h"
 #include "Message.h"
-#include <iostream>
+#include "tools.h"
+//#include <iostream>
 #include <thread>
 #include <atomic>
+#include <json/json.h>
 
 #ifdef _WIN32
 	#include <winsock2.h>
@@ -30,17 +32,28 @@ std::atomic<bool> stopFlag(false);
 SOCKET serverSocket = INVALID_SOCKET;
 std::thread worker;
 
+void processData(ILuaBase* LUA, const std::string& data) {
+	Print(LUA, "Data received: " + data);
+	// Perform your task here
+	Json::Value jsonData;
+	Json::CharReaderBuilder readerBuilder;
+	std::string errs;
 
-void Print(ILuaBase* LUA, std::string msg)
-{
-	LUA->PushSpecial(GarrysMod::Lua::SPECIAL_GLOB); // Push the global table
-	LUA->GetField(-1, "print"); // Get the print function
-	LUA->PushString(msg.c_str()); // Push our argument
-	LUA->Call(1, 0); // Call the function
-	LUA->Pop(); // Pop the global table off the stack
+	std::istringstream sstream(data);
+	if (Json::parseFromStream(readerBuilder, sstream, &jsonData, &errs)) {
+		std::string msg = jsonData["message"].asString();
+		std::string timestamp = jsonData["timestamp"].asString();
+
+		// Create a Message instance and print it
+		Message msgObj(msg, timestamp, LUA);
+		msgObj.print();
+	}
+	else {
+		Error(LUA, "Failed to parse JSON: " + errs);
+	}
 }
 
-void WebServerThread(ILuaBase* LUA, SOCKET serverSocket) {
+void WebServerThread(ILuaBase* LUA) {
 	char buffer[1024] = { 0 };
 
 	while (!stopFlag.load()) {
@@ -48,7 +61,7 @@ void WebServerThread(ILuaBase* LUA, SOCKET serverSocket) {
 
 		if (bytesRead > 0) {
 			std::string data(buffer, bytesRead);
-			Print(LUA, "Received: " + data);
+			processData(LUA, data);
 			memset(buffer, 0, sizeof(buffer));
 		}
 		else if (bytesRead == 0) {
@@ -69,13 +82,24 @@ void WebServerThread(ILuaBase* LUA, SOCKET serverSocket) {
 	Print(LUA, "Thread exited cleanly.");
 }
 
-LUA_FUNCTION( MyExampleFunction )
-{
-	double first_number = LUA->CheckNumber( 1 );
-	double second_number = LUA->CheckNumber( 2 );
 
-	LUA->PushNumber( first_number + second_number );
-	return 1;
+LUA_FUNCTION(SendToWebServer)
+{
+	std::string data = LUA->CheckString(1);
+
+	if (serverSocket == INVALID_SOCKET) {
+		Error(LUA, "Socket is not connected.");
+		return 0;
+	}
+
+	int result = send(serverSocket, data.c_str(), data.size(), 0);
+	if (result == SOCKET_ERROR) {
+		Error(LUA, "Failed to send data.");
+		return 0;
+	}
+
+	Print(LUA, "Data sent successfully.");
+	return 0;
 }
 
 LUA_FUNCTION(ConnectToWebServer)
@@ -85,14 +109,14 @@ LUA_FUNCTION(ConnectToWebServer)
 #ifdef _WIN32
 	WSADATA wsaData;
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-		std::cerr << "WSAStartup failed with error: " << WSAGetLastError() << std::endl;
+		Error(LUA, "WSAStartup failed with error: " + WSAGetLastError());
 		return -1;
 	}
 #endif
 
 	serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (serverSocket == INVALID_SOCKET) {
-		std::cerr << "Socket creation error." << std::endl;
+		Error(LUA, "Socket creation error.");
 		CLEANUP_WS;
 		return -1;
 	}
@@ -102,14 +126,14 @@ LUA_FUNCTION(ConnectToWebServer)
 	serv_addr.sin_port = htons(PORT);
 
 	if (inet_pton(AF_INET, HOST, &serv_addr.sin_addr) <= 0) {
-		std::cerr << "Invalid address / Address not supported" << std::endl;
+		Error(LUA, "Invalid address / Address not supported");
 		CLOSE_SOCKET(serverSocket);
 		CLEANUP_WS;
 		return -1;
 	}
 
 	if (connect(serverSocket, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == SOCKET_ERROR) {
-		std::cerr << "Connection failed." << std::endl;
+		Error(LUA, "Connection failed.");
 		CLOSE_SOCKET(serverSocket);
 		CLEANUP_WS;
 		return -1;
@@ -117,35 +141,33 @@ LUA_FUNCTION(ConnectToWebServer)
 
 	Print(LUA, "Connected to Node.js backend. Waiting for data...");
 
-	worker = std::thread(WebServerThread, LUA, serverSocket);
+	worker = std::thread(WebServerThread, LUA);
 
 	return 0;
 }
 
 LUA_FUNCTION(DisconnectWebServer)
 {
-	// Signal the worker thread to stop
 	stopFlag.store(true);
 
-	// Close the socket to unblock `recv`
 	CLOSE_SOCKET(serverSocket);
 
-	// Wait for the worker thread to finish
 	worker.join();
 
-	std::cout << "Main thread exiting." << std::endl;
+	Print(LUA, "Main thread exiting.");
 
 #ifdef _WIN32
 	CLEANUP_WS;
 #endif
+	return 0;
 }
 
 GMOD_MODULE_OPEN()
 {
 	LUA->PushSpecial(GarrysMod::Lua::SPECIAL_GLOB);
 
-	LUA->PushCFunction(MyExampleFunction);
-	LUA->SetField(-2, "MyExampleFunction");
+	LUA->PushCFunction(SendToWebServer);
+	LUA->SetField(-2, "SendToWebServer");
 
 	LUA->PushCFunction(ConnectToWebServer);
 	LUA->SetField(-2, "ConnectToWebServer");
