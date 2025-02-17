@@ -1,3 +1,5 @@
 .vs
 playServer/projects/windows/vs2022/vcpkg_installed/*
 playServer/projects/windows/vs2022/x86/*
+queueServer/projects/windows/vs2022/vcpkg_installed/*
+queueServer/projects/windows/vs2022/x86/*
