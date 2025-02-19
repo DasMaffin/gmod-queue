@@ -1,5 +1,4 @@
 #pragma once
-#define MESSAGE_H
 
 #include <string>
 #include "GarrysMod/Lua/Interface.h"

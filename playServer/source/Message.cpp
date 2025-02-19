@@ -1,6 +1,5 @@
 #include "Message.h"
 #include "tools.h"
-#include <iostream>
 
 // Constructor
 Message::Message(const std::string& msg, const std::string& time, GarrysMod::Lua::ILuaBase* lua)

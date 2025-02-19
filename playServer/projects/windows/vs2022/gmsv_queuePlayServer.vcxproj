@@ -171,6 +171,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\source\GameServer.cpp" />
     <ClCompile Include="..\..\..\source\Message.cpp" />
     <ClCompile Include="..\..\..\source\module.cpp" />
     <ClCompile Include="..\..\..\source\tools.cpp" />
@@ -202,6 +203,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\source\GameServer.h" />
     <ClInclude Include="..\..\..\source\Message.h" />
     <ClInclude Include="..\..\..\source\tools.h" />
   </ItemGroup>
