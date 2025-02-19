@@ -24,11 +24,12 @@
 class GameServer
 {
 public:
-    GameServer(const std::string& serverIP, int serverPort, const std::string& webServerIP, int webServerPort, GarrysMod::Lua::ILuaBase* lua);
+    GameServer(const std::string& serverIP, int serverPort, const std::string& webServerIP, int webServerPort, int maxPlayers, GarrysMod::Lua::ILuaBase* lua);
     ~GameServer();
 
     bool connectToWebServer();
     void sendInitPackage();
+    void sendNewPlayer(const std::string& player);
     void listenForData();
     void cleanup();
 
@@ -41,4 +42,6 @@ private:
     SOCKET webSocket;
     std::atomic<bool> connected;
     GarrysMod::Lua::ILuaBase* LUA;
+
+    int maxPlayers;
 };

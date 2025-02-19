@@ -3,10 +3,9 @@
 #include <thread>
 #include <string>
 
-GameServer::GameServer(const std::string& serverIP, int serverPort, const std::string& webServerIP, int webServerPort, GarrysMod::Lua::ILuaBase* lua)
-    : serverIP(serverIP), serverPort(serverPort), webServerIP(webServerIP), webServerPort(webServerPort), serverSocket(INVALID_SOCKET), webSocket(INVALID_SOCKET), connected(false), LUA(lua)
+GameServer::GameServer(const std::string& serverIP, int serverPort, const std::string& webServerIP, int webServerPort, int maxPlayers, GarrysMod::Lua::ILuaBase* lua)
+    : serverIP(serverIP), serverPort(serverPort), webServerIP(webServerIP), webServerPort(webServerPort), serverSocket(INVALID_SOCKET), webSocket(INVALID_SOCKET), connected(false), maxPlayers(maxPlayers), LUA(lua)
 {
-    // Initialize Winsock (if needed)
 #ifdef _WIN32
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
@@ -46,12 +45,10 @@ bool GameServer::connectToWebServer()
 
     connected.store(true);
 
-    // Send the initial data
-    sendInitPackage();
-
-    // Start listening for data
     std::thread listenerThread(&GameServer::listenForData, this);
-    listenerThread.detach();  // Detach so it runs in the background
+    listenerThread.detach();
+
+    sendInitPackage();
 
     return true;
 }
@@ -64,11 +61,35 @@ void GameServer::sendInitPackage()
         return;
     }
 
-    // Example initialization data: Server IP, Max Players, etc.
-    std::string initData = "{ \"serverIP\": \"" + serverIP + "\", \"maxPlayers\": 10, \"isQueueServer\": false }";
-    send(webSocket, initData.c_str(), initData.size(), 0);
+    std::string initData = "{  \"action\": \"initServer\", \"serverIP\": \"" + serverIP + "\", \"maxPlayers\": " + std::to_string(maxPlayers) + ", \"isQueueServer\": false }";
+    int bytesSent = send(webSocket, initData.c_str(), initData.size(), 0);
+    if (bytesSent == SOCKET_ERROR)
+    {
+        Error(LUA, "Failed to send new player data to web server.");
+        return;
+    }
     Print(LUA, "Sent initialization data: " + initData);
 }
+
+void GameServer::sendNewPlayer(const std::string& playerName)
+{
+    if (!connected.load())
+    {
+        Error(LUA, "Not connected to web server. Cannot send new player.");
+        return;
+    }
+
+    std::string playerData = "{ \"action\": \"addPlayer\", \"playerName\": \"" + playerName + "\", \"serverIP\": \"" + serverIP + "\" }";
+
+    int bytesSent = send(webSocket, playerData.c_str(), playerData.size(), 0);
+    if (bytesSent == SOCKET_ERROR)
+    {
+        Error(LUA, "Failed to send new player data to web server.");
+        return;
+    }
+    Print(LUA, "Sent new player to backend: " + playerData);
+}
+
 
 void GameServer::listenForData()
 {
@@ -80,8 +101,9 @@ void GameServer::listenForData()
         bytesReceived = recv(webSocket, buffer, sizeof(buffer) - 1, 0);
         if (bytesReceived > 0)
         {
-            buffer[bytesReceived] = '\0';  // Null-terminate the received data
-            Print(LUA, "Received from webserver: " + std::string(buffer, sizeof(buffer)));  // Print received data to Lua
+            buffer[bytesReceived] = '\0';
+			std::string data(buffer, bytesReceived);
+            Print(LUA, "Received from webserver: " + data);
         }
         else if (bytesReceived == 0)
         {
@@ -93,8 +115,6 @@ void GameServer::listenForData()
             Error(LUA, "Error receiving data.");
             break;
         }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Prevent high CPU usage
     }
 }
 

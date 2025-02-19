@@ -4,12 +4,18 @@ if SERVER then
     util.AddNetworkString("NotifyServerOfClientReady")
 
     require("queuePlayServer")
-
-    ConnectToWebServer(game.GetIPAddress(), GetConVar("webServerIP"):GetString(), 8080)
     
     net.Receive("NotifyServerOfClientReady", function(len, ply)
-        -- SendToWebServer("{ \"steamid\": \"" .. ply:SteamID64() .. "\" }")
+        SendToWebServer(ply:SteamID64())
     end)
+
+    hook.Add( "GetGameDescription" , "SV_IDENT:GetGameDescription" , function()
+        local ip = game.GetIPAddress()
+        if not string.StartWith( ip , "0.0.0.0" ) then            
+            ConnectToWebServer(ip, GetConVar("webServerIP"):GetString(), 8080)
+            hook.Remove( "GetGameDescription" , "SV_IDENT:GetGameDescription")
+        end
+    end )
 
     hook.Add("ShutDown", "MyModShutDown", function()
         DisconnectWebServer()

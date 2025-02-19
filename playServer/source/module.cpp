@@ -13,6 +13,7 @@ LUA_FUNCTION(ConnectToWebServer)
         const char* localServerIP = "";
         const char* webServerIP = "";
         int webServerPort = 8080;
+		int maxPlayers = 32;
 
         if (LUA->IsType(1, GarrysMod::Lua::Type::STRING)) {
 			localServerIP = LUA->GetString(1);
@@ -29,11 +30,14 @@ LUA_FUNCTION(ConnectToWebServer)
 			return 0;
 		}
         if (LUA->IsType(3, GarrysMod::Lua::Type::NUMBER)) {
-            webServerPort = LUA->GetNumber(3);
+            webServerPort = (int)LUA->GetNumber(3);
         }
+		if (LUA->IsType(4, GarrysMod::Lua::Type::NUMBER)) {
+			maxPlayers = (int)LUA->GetNumber(4);
+		}
 
         // Initialize the GameServer with the provided values
-        gameServer = new GameServer(localServerIP, 8080, webServerIP, webServerPort, LUA);
+        gameServer = new GameServer(localServerIP, 8080, webServerIP, webServerPort, maxPlayers, LUA);
     }
 
     // Attempt to connect to the web server
@@ -44,12 +48,11 @@ LUA_FUNCTION(ConnectToWebServer)
     return 1;
 }
 
-
-LUA_FUNCTION(SendToWebServer)
+LUA_FUNCTION(RegisterNewPlayer)
 {
 	if (gameServer != nullptr)
 	{
-		gameServer->sendInitPackage();
+		gameServer->sendNewPlayer(LUA->GetString(1));
 		return 0;
 	}
 	Error(LUA, "GameServer not connected or initialized.");
@@ -71,8 +74,8 @@ GMOD_MODULE_OPEN()
 {
 	LUA->PushSpecial(GarrysMod::Lua::SPECIAL_GLOB);
 
-	LUA->PushCFunction(SendToWebServer);
-	LUA->SetField(-2, "SendToWebServer");
+	LUA->PushCFunction(RegisterNewPlayer);
+	LUA->SetField(-2, "RegisterNewPlayer");
 
 	LUA->PushCFunction(ConnectToWebServer);
 	LUA->SetField(-2, "ConnectToWebServer");

@@ -74,61 +74,60 @@ const tcpServer = net.createServer((socket) => {
     try {
       const message = JSON.parse(data.toString());
 
-      // Handle initial server registration
-      if (message.serverIP && message.maxPlayers !== undefined && message.isQueueServer !== undefined) {
-        const server = new Server(
-          message.serverIP,
-          message.maxPlayers,
-          message.isQueueServer
-        );
-        server.setSocket(socket); // Associate the socket with the server instance
-        servers.set(message.serverIP, server);
+      if(message.action == "initServer"){
+        // Handle initial server registration
+        if (message.serverIP && message.maxPlayers !== undefined && message.isQueueServer !== undefined) {
+          const server = new Server(
+            message.serverIP,
+            message.maxPlayers,
+            message.isQueueServer
+          );
+          server.setSocket(socket); // Associate the socket with the server instance
+          servers.set(message.serverIP, server);
 
-        if (server.isQueueServer) {
-          queueServer = server;
+          if (server.isQueueServer) {
+            queueServer = server;
+          }
+
+          console.log(
+            `Server registered: ${message.serverIP}, Max Players: ${message.maxPlayers}, Queue Server: ${message.isQueueServer}`
+          );
+
+          socket.write(
+            JSON.stringify({ status: "success", message: "Server registered.", code: 200 }) +
+              "\n"
+          );
+
+          return;
         }
-
-        console.log(
-          `Server registered: ${message.serverIP}, Max Players: ${message.maxPlayers}, Queue Server: ${message.isQueueServer}`
-        );
-
-        // Acknowledge registration
-        socket.write(
-          JSON.stringify({ status: "success", message: "Server registered." }) +
-            "\n"
-        );
-
-        return;
       }
-
-      // Handle player addition/removal
-      if (message.command === "addPlayer" && message.serverIP) {
-        const server = servers.get(message.serverIP);
-        if (server) {
-          const response = server.addPlayer(message.playerName);
-          socket.write(JSON.stringify(response) + "\n");
-        } else {
-          socket.write(
-            JSON.stringify({ status: "error", message: "Server not found." }) +
-              "\n"
-          );
-        }
-      } else if (message.command === "removePlayer" && message.serverIP) {
-        const server = servers.get(message.serverIP);
-        if (server) {
-          const response = server.removePlayer(message.playerName);
-          socket.write(JSON.stringify(response) + "\n");
-        } else {
-          socket.write(
-            JSON.stringify({ status: "error", message: "Server not found." }) +
-              "\n"
-          );
+      else if(message.action == "addPlayer"){
+        if (message.serverIP) {
+          const server = servers.get(message.serverIP);
+          if (server) {
+            const response = server.addPlayer(message.playerName);
+          } else {
+            socket.write(
+              JSON.stringify({ status: "error", message: "Server not found.", code: 404 }) +
+                "\n"
+            );
+          }
+        } else if (message.command === "removePlayer" && message.serverIP) {
+          const server = servers.get(message.serverIP);
+          if (server) {
+            const response = server.removePlayer(message.playerName);
+          } else {
+            socket.write(
+              JSON.stringify({ status: "error", message: "Server not found.", code: 404 }) +
+                "\n"
+            );
+          }
         }
       }
     } catch (err) {
       console.error("Error processing message:", err);
       socket.write(
-        JSON.stringify({ status: "error", message: "Invalid data format." }) +
+        JSON.stringify({ status: "error", message: "Invalid data format.", code: 400 }) +
           "\n"
       );
     }
@@ -137,7 +136,6 @@ const tcpServer = net.createServer((socket) => {
   socket.on("end", () => {
     console.log("Server disconnected");
     connections = connections.filter((conn) => conn !== socket);
-
     // Remove server instance if socket is associated
     for (const [ip, server] of servers.entries()) {
       if (server.socket === socket) {
@@ -162,43 +160,3 @@ const tcpServer = net.createServer((socket) => {
 tcpServer.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
-
-// // Create HTTP server to handle POST requests
-// const httpServer = http.createServer((req, res) => {
-//   if (req.method === "POST" && req.url === "/update") {
-//     let body = "";
-
-//     req.on("data", (chunk) => {
-//       body += chunk;
-//     });
-
-//     req.on("end", () => {
-//       try {
-//         const updatedData = JSON.parse(body);
-//         playServer.updateData(updatedData);
-//         console.log("Data updated:", updatedData);
-
-//         // Notify all connected clients with the updated data
-//         connections.forEach((socket) => {
-//           socket.write(playServer.getData() + "\n");
-//         });
-
-//         res.statusCode = 200;
-//         res.setHeader("Content-Type", "application/json");
-//         res.end(JSON.stringify({ status: "success", data: updatedData }));
-//       } catch (err) {
-//         console.error("Error parsing JSON:", err);
-//         res.statusCode = 400;
-//         res.setHeader("Content-Type", "application/json");
-//         res.end(JSON.stringify({ status: "error", message: "Invalid JSON" }));
-//       }
-//     });
-//   } else {
-//     res.statusCode = 404;
-//     res.end();
-//   }
-// });
-
-// httpServer.listen(HTTP_PORT, () => {
-//   console.log(`HTTP server listening on port ${HTTP_PORT}`);
-// });
